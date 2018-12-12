@@ -8,7 +8,7 @@ edition = "2018"
 description = "Check Point API library"
 documentation = "https://docs.rs/cp_api"
 repository = "https://github.com/seiruss/cp_api"
-keywords = ["check point", "management api", "r80"]
+keywords = ["checkpoint", "api", "r80"]
 
 [dependencies]
 reqwest = "0.9.5"
