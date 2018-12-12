@@ -1,0 +1,17 @@
+[package]
+name = "cp_api"
+version = "0.1.0"
+authors = ["Russell Seifert <rseifert@checkpoint.com>"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+description = "Check Point API library"
+documentation = "https://docs.rs/cp_api"
+repository = "https://github.com/seiruss/cp_api"
+keywords = ["check point", "management api", "r80"]
+
+[dependencies]
+reqwest = "0.9.5"
+serde = "1.0"
+serde_json = "1.0"
+serde_derive = "1.0"
