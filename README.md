@@ -1,2 +1,4 @@
 # cp_api
-Rust library for Check Point Management API
+Rust crate for the Check Point Management API
+
+- [Documentation](https://docs.rs/cp_api)
