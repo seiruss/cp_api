@@ -35,18 +35,18 @@ use crate::error::{Error, Result};
 /// ```
 #[derive(Serialize)]
 pub struct Client {
-    server: &'static str,
+    server: String,
     port: u16,
-    certificate: &'static str,
+    certificate: String,
     accept_invalid_certs: bool,
-    proxy: &'static str,
+    proxy: String,
     connect_timeout: time::Duration,
     session_timeout: u64,
-    domain: &'static str,
+    domain: String,
     sid: String,
     api_server_version: String,
     wait_for_task: bool,
-    log_file: &'static str,
+    log_file: String,
     all_calls: Vec<serde_json::Value>,
     show_password: bool,
 }
@@ -56,20 +56,20 @@ impl Client {
     /// ```
     /// let mut client = Client::new("192.168.1.10", 443);
     /// ```
-    pub fn new(server: &'static str, port: u16) -> Client {
+    pub fn new(server: &str, port: u16) -> Client {
         Client {
-            server,
+            server: String::from(server),
             port,
-            certificate: "",
+            certificate: String::new(),
             accept_invalid_certs: false,
-            proxy: "",
+            proxy: String::new(),
             connect_timeout: time::Duration::from_secs(30),
             session_timeout: 600,
-            domain: "",
+            domain: String::new(),
             sid: String::with_capacity(50),
             api_server_version: String::with_capacity(5),
             wait_for_task: true,
-            log_file: "",
+            log_file: String::new(),
             all_calls: Vec::new(),
             show_password: false,
         }
@@ -210,7 +210,7 @@ impl Client {
         cb = cb.timeout(self.connect_timeout);
 
         if self.proxy != "" {
-            cb = cb.proxy(reqwest::Proxy::https(self.proxy).map_err(Error::Reqwest)?);
+            cb = cb.proxy(reqwest::Proxy::https(self.proxy.as_str()).map_err(Error::Reqwest)?);
         }
 
         if self.accept_invalid_certs == true && self.certificate == "" {
@@ -219,7 +219,7 @@ impl Client {
 
         if self.certificate != "" {
             let mut buf: Vec<u8> = Vec::new();
-            File::open(self.certificate).map_err(Error::Io)?
+            File::open(self.certificate.as_str()).map_err(Error::Io)?
                 .read_to_end(&mut buf).map_err(Error::Io)?;
 
             let cert = reqwest::Certificate::from_der(&buf).map_err(Error::Reqwest)?;
@@ -303,8 +303,8 @@ impl Client {
     /// ```
     /// client.certificate("/home/admin/mycert.cer");
     /// ```
-    pub fn certificate(&mut self, s: &'static str) {
-        self.certificate = s;
+    pub fn certificate(&mut self, s: &str) {
+        self.certificate = s.to_string();
     }
 
     /// Set the certificate validation.
@@ -323,8 +323,8 @@ impl Client {
     /// ```
     /// client.proxy("https://10.1.1.100:8080");
     /// ```
-    pub fn proxy(&mut self, s: &'static str) {
-        self.proxy = s;
+    pub fn proxy(&mut self, s: &str) {
+        self.proxy = s.to_string();
     }
 
     /// Set the connection timeout in seconds to the Management server. Default is 30 seconds.
@@ -347,8 +347,8 @@ impl Client {
     /// ```
     /// client.domain("System Data");
     /// ```
-    pub fn domain(&mut self, s: &'static str) {
-        self.domain = s;
+    pub fn domain(&mut self, s: &str) {
+        self.domain = s.to_string();
     }
 
     /// Get the sid after logging in.
@@ -429,8 +429,8 @@ impl Client {
     ///
     /// client.log_file("/home/admin/log.txt");
     /// ```
-    pub fn log_file(&mut self, s: &'static str) {
-        self.log_file = s;
+    pub fn log_file(&mut self, s: &str) {
+        self.log_file = s.to_string();
     }
 
     // Update the vector of API calls
@@ -492,7 +492,7 @@ impl Client {
             return Err(Error::LogFileNotSet)
         }
 
-        let mut f = File::create(self.log_file).map_err(Error::Io)?;
+        let mut f = File::create(self.log_file.as_str()).map_err(Error::Io)?;
 
         // Save all_calls with an indent of 4 spaces instead of 2 (the default)
         let buf = Vec::new();
@@ -503,7 +503,7 @@ impl Client {
         f.write_all(&ser.into_inner()).map_err(Error::Io)?;
 
         self.all_calls.clear();
-        self.log_file = "";
+        self.log_file.clear();
 
         Ok(())
     }
@@ -538,7 +538,7 @@ impl fmt::Debug for Client {
             .field("server", &self.server)
             .field("port", &self.port)
             .field("certificate", &self.certificate)
-            .field("accept_invalid_certs", &self.certificate)
+            .field("accept_invalid_certs", &self.accept_invalid_certs)
             .field("proxy", &self.proxy)
             .field("connect_timeout", &self.connect_timeout)
             .field("session_timeout", &self.session_timeout)
