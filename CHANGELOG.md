@@ -1,3 +1,9 @@
+# v0.1.3
+
+- Changed missed if expressions to use is_empty instead of "".
+- Added readme to Cargo.toml.
+- Added tests.
+
 # v0.1.2
 
 - Changed logout function to use clear method on the sid.

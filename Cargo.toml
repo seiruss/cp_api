@@ -1,6 +1,6 @@
 [package]
 name = "cp_api"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Russell Seifert <rseifert@checkpoint.com>"]
 license = "MIT/Apache-2.0"
 edition = "2018"
@@ -9,6 +9,7 @@ description = "Check Point API library"
 documentation = "https://docs.rs/cp_api"
 repository = "https://github.com/seiruss/cp_api"
 keywords = ["checkpoint", "api", "r80"]
+readme = "README.md"
 
 [dependencies]
 reqwest = "0.9.5"

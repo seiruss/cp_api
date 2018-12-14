@@ -85,8 +85,8 @@ impl Client {
     /// let mut client = Client::new("192.168.1.10", 443);
     /// client.certificate("/home/admin/cert.cer");
     /// let login = client.login("user", "pass")?;
-    /// assert_eq!(true, login.is_success());
-    /// assert_ne!("", client.sid());
+    /// assert!(login.is_success());
+    /// assert!(!client.sid().is_empty());
     /// ```
     pub fn login(&mut self, user: &str, pass: &str) -> Result<Response> {
         let payload = json!({
@@ -121,8 +121,8 @@ impl Client {
     ///
     /// ```
     /// let logout = client.logout()?;
-    /// assert_eq!(true, logout.is_success());
-    /// assert_eq!("", client.sid());
+    /// assert!(logout.is_success());
+    /// assert!(client.sid().is_empty());
     /// ```
     pub fn logout(&mut self) -> Result<Response> {
         let logout = self.call("logout", json!({}))?;
@@ -145,7 +145,7 @@ impl Client {
     /// });
     ///
     /// let host = client.call("add-host", host_payload)?;
-    /// assert_eq!(true, host.is_success());
+    /// assert!(host.is_success());
     ///
     /// let rule_payload = json!({
     ///     "name": "allow host1",
@@ -156,10 +156,10 @@ impl Client {
     /// });
     ///
     /// let rule = client.call("add-access-rule", rule_payload)?;
-    /// assert_eq!(true, rule.is_success());
+    /// assert!(rule.is_success());
     ///
     /// let publish = client.call("publish", json!({}))?;
-    /// assert_eq!(true, publish.is_success());
+    /// assert!(publish.is_success());
     /// ```
     pub fn call(&mut self, command: &str, payload: serde_json::Value) -> Result<Response> {
         let url = format!("https://{}:{}/web_api/{}", self.server, self.port, command);
@@ -178,7 +178,7 @@ impl Client {
             res = self._wait_for_task(res.data["task-id"].as_str().unwrap(), command)?;
         }
 
-        if self.log_file != "" {
+        if !self.log_file.is_empty() {
             self.update_calls(command, url.as_str(), headers2, payload, &res)?;
         }
 
@@ -193,7 +193,7 @@ impl Client {
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         headers.insert(USER_AGENT, HeaderValue::from_static("cp_api"));
 
-        if self.sid != "" {
+        if !self.sid.is_empty() {
             let n = HeaderName::from_static("x-chkp-sid");
             let v = HeaderValue::from_str(self.sid.as_str()).map_err(Error::HeaderValue)?;
 
@@ -209,15 +209,15 @@ impl Client {
         cb = cb.default_headers(headers);
         cb = cb.timeout(self.connect_timeout);
 
-        if self.proxy != "" {
+        if !self.proxy.is_empty() {
             cb = cb.proxy(reqwest::Proxy::https(self.proxy.as_str()).map_err(Error::Reqwest)?);
         }
 
-        if self.accept_invalid_certs == true && self.certificate == "" {
+        if self.accept_invalid_certs == true && self.certificate.is_empty() {
             cb = cb.danger_accept_invalid_certs(true);
         }
 
-        if self.certificate != "" {
+        if !self.certificate.is_empty() {
             let mut buf: Vec<u8> = Vec::new();
             File::open(self.certificate.as_str()).map_err(Error::Io)?
                 .read_to_end(&mut buf).map_err(Error::Io)?;
@@ -488,7 +488,7 @@ impl Client {
     /// client.save_log()?;
     /// ```
     pub fn save_log(&mut self) -> Result<()> {
-        if self.log_file == "" {
+        if self.log_file.is_empty() {
             return Err(Error::LogFileNotSet)
         }
 
