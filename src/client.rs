@@ -128,7 +128,7 @@ impl Client {
         let logout = self.call("logout", json!({}))?;
 
         if logout.is_success() {
-            self.sid = String::with_capacity(50);
+            self.sid.clear();
         }
 
         Ok(logout)
@@ -191,7 +191,7 @@ impl Client {
 
         headers.insert(ACCEPT, HeaderValue::from_static("*/*"));
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-        headers.insert(USER_AGENT, HeaderValue::from_static("Rust cp-mgmt-api"));
+        headers.insert(USER_AGENT, HeaderValue::from_static("cp_api"));
 
         if self.sid != "" {
             let n = HeaderName::from_static("x-chkp-sid");
@@ -524,7 +524,7 @@ impl Client {
 
 impl Drop for Client {
     fn drop(&mut self) {
-        if self.sid != "" {
+        if !self.sid.is_empty() {
             if let Err(e) = self.logout() {
                 eprintln!("Error logging out while dropping the Client: {}", e);
             }
