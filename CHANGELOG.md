@@ -11,4 +11,4 @@
 
 # v0.1.0
 
-- First release: https://community.checkpoint.com/docs/DOC-XXXX
+- First release
