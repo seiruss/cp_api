@@ -1,8 +1,11 @@
-# cp_api
+# cp_api &emsp; [![Version]][crates.io]
 
-[![crates.io](https://img.shields.io/crates/v/cp_api.svg)](https://crates.io/crates/cp_api)
+[crates.io]: https://crates.io/crates/cp_api
+[Version]: https://img.shields.io/crates/v/cp_api.svg
 
-Rust crate for the Check Point Management API
+The **cp_api** crate provides a simple way to use the Check Point Management API.
+
+---
 
 - [Documentation](https://docs.rs/cp_api)
 - [Changelog](https://github.com/seiruss/cp_api/blob/master/CHANGELOG.md)
