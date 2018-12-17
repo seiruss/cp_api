@@ -52,7 +52,7 @@ fn logout_then_call() {
 
     assert!(client.sid().is_empty());
 
-    let res = client.call("show-host", json!({"name": "dot3"})).unwrap();
+    let res = client.call("show-host", json!({"name": "host1"})).unwrap();
     if res.is_not_success() {
         println!("Test passed: {}, {}", res.status(), res.data["message"]);
     }

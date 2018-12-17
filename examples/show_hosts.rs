@@ -1,6 +1,7 @@
 // cargo run --example show_hosts
 
 use cp_api::{Client, Error};
+use rpassword;
 use std::process;
 use std::io::{self, Write};
 
@@ -25,7 +26,10 @@ fn main() {
 		process::exit(1);
 	}
 
-    client.save_log().expect("Failed to save log file");
+    if let Err(e) = client.save_log() {
+		eprintln!("Failed to save log file: {}", e);
+		process::exit(1);
+	}
 }
 
 fn build_client() -> Client {
@@ -67,8 +71,8 @@ fn login(client: &mut Client) -> Result<(), Error> {
 	let login_res = client.login(user.as_str(), pass.as_str())?;
 
 	if login_res.is_not_success() {
-		eprintln!("Failed to login: {}", login_res.data["message"]);
-		process::exit(1);
+		let msg = format!("Failed to login: {}", login_res.data["message"]);
+		return Err(Error::Custom(msg));
 	}
 
 	Ok(())
@@ -80,8 +84,8 @@ fn logout(client: &mut Client) -> Result<(), Error> {
 	let logout_res = client.logout()?;
 
 	if logout_res.is_not_success() {
-		eprintln!("Failed to logout: {}", logout_res.data["message"]);
-		process::exit(1);
+		let msg = format!("Failed to logout: {}", logout_res.data["message"]);
+		return Err(Error::Custom(msg));
 	}
 
 	Ok(())
@@ -93,8 +97,8 @@ fn show_hosts(client: &mut Client) -> Result<(), Error> {
 	let hosts_res = client.query("show-hosts", "standard")?;
 
 	if hosts_res.is_not_success() {
-		eprintln!("Failed to run show-hosts: {}", hosts_res.data["message"]);
-		process::exit(1);
+		let msg = format!("Failed to run show-hosts: {}", hosts_res.data["message"]);
+		return Err(Error::Custom(msg));
 	}
 
     for host in hosts_res.objects {

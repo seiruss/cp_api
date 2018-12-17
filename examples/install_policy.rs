@@ -27,7 +27,10 @@ fn main() {
 		process::exit(1);
 	}
 
-	client.save_log().expect("Failed to save log file");
+	if let Err(e) = client.save_log() {
+		eprintln!("Failed to save log file: {}", e);
+		process::exit(1);
+	}
 }
 
 fn build_client() -> Client {
@@ -69,8 +72,8 @@ fn login(client: &mut Client) -> Result<(), Error> {
 	let login_res = client.login(user.as_str(), pass.as_str())?;
 
 	if login_res.is_not_success() {
-		eprintln!("Failed to login: {}", login_res.data["message"]);
-		process::exit(1);
+		let msg = format!("Failed to login: {}", login_res.data["message"]);
+		return Err(Error::Custom(msg));
 	}
 
 	Ok(())
@@ -82,8 +85,8 @@ fn logout(client: &mut Client) -> Result<(), Error> {
 	let logout_res = client.logout()?;
 
 	if logout_res.is_not_success() {
-		eprintln!("Failed to logout: {}", logout_res.data["message"]);
-		process::exit(1);
+		let msg = format!("Failed to logout: {}", logout_res.data["message"]);
+		return Err(Error::Custom(msg));
 	}
 
 	Ok(())
@@ -106,8 +109,8 @@ fn install(client: &mut Client) -> Result<(), Error> {
 	let install_res = client.call("install-policy", payload)?;
 
 	if install_res.is_not_success() {
-		eprintln!("Failed to run install-policy: {}", install_res.data["message"]);
-		process::exit(1);
+		let msg = format!("Failed to run install-policy: {}", install_res.data["message"]);
+		return Err(Error::Custom(msg));
 	}
 
 	Ok(())

@@ -1,3 +1,9 @@
+# v0.1.4
+
+- Added a `Custom` value for generic errors.
+- Updated examples using this new value.
+- Updated error while running a query.
+
 # v0.1.3
 
 - Changed missed if expressions to use is_empty instead of "".

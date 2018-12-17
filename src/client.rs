@@ -243,6 +243,7 @@ impl Client {
     ///
     /// ```
     /// let hosts = client.query("show-hosts", "standard")?;
+    /// assert!(hosts.is_success());
     ///
     /// for host in hosts.objects {
     ///     println!("{} - {}", host["name"], host["ipv4-address"]);
@@ -267,7 +268,10 @@ impl Client {
             res = self.call(command, payload)?;
 
             if res.is_not_success() {
-                return Err(Error::QueryCall(json!(res)))
+                let msg = format!("Received an unsuccessful Response from the API \
+                                   while running a query. {}, {}",
+                                   res.data["code"], res.data["message"]);
+                return Err(Error::Custom(msg));
             }
 
             to = match res.data["to"].as_u64() {
@@ -448,7 +452,8 @@ impl Client {
                 *obj = json!("*****");
             }
             else {
-                return Err(Error::NoPassword(json!(res)))
+                let msg = String::from("Failed to get the password to obfuscate from payload");
+                return Err(Error::Custom(msg));
             }
         }
 
@@ -489,7 +494,8 @@ impl Client {
     /// ```
     pub fn save_log(&mut self) -> Result<()> {
         if self.log_file.is_empty() {
-            return Err(Error::LogFileNotSet)
+            let msg = String::from("log_file on the Client is not set");
+            return Err(Error::Custom(msg));
         }
 
         let mut f = File::create(self.log_file.as_str()).map_err(Error::Io)?;

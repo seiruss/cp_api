@@ -12,7 +12,6 @@
 //! ```
 //! use cp_api::{Client, Error};
 //! use serde_json::json;
-//! use std::process;
 //!
 //! fn example() -> Result<(), Error> {
 //!     let mut client = Client::new("192.168.1.10", 443);
@@ -20,17 +19,16 @@
 //!
 //!     let login_response = client.login("user", "pass")?;
 //!     if login_response.is_not_success() {
-//!         eprintln!("Failed to login: {}", login_response.data["message"]);
-//!         process::exit(1);
+//!     let msg = format!("Failed to login: {}", login_response.data["message"]);
+//!         return Err(Error::Other(msg));
 //!     }
 //!
 //!     println!("api-server-version: {}, sid: {}", client.api_server_version(), client.sid());
 //!
 //!     let logout_response = client.logout()?;
 //!     if logout_response.is_not_success() {
-//!         eprintln!("Failed to logout: {}", logout_response.data["message"]);
-//!         process::exit(1);
-//!     }
+//!         let msg = format!("Failed to logout: {}", logout_response.data["message"]);
+//!         return Err(Error::Other(msg));
 //!
 //!     Ok(())
 //! }
@@ -43,7 +41,6 @@
 //! ```
 //! use cp_api::{Client, Error};
 //! use serde_json::json;
-//! use std::process;
 //!
 //! fn install_policy(mut client: Client) -> Result<(), Error> {
 //!     let payload = json!({
@@ -55,9 +52,9 @@
 //!     let install_response = client.call("install-policy", payload)?;
 //!
 //!     if install_response.is_not_success() {
-//!         eprintln!("Failed to install policy: {}", install_response.data["message"]);
+//!         let msg = format!("Failed to install policy: {}", install_response.data["message"]);
 //!         client.logout()?;
-//!         process::exit(1);
+//!         return Err(Error::Other(msg));
 //!     }
 //!
 //!     Ok(())
@@ -70,6 +67,11 @@
 //!
 //! ```
 //! let hosts = client.query("show-hosts", "standard")?;
+//!
+//! if hosts_res.is_not_success() {
+//!     let msg = format!("Failed to run show-hosts: {}", hosts_res.data["message"]);
+//!     return Err(Error::Custom(msg));
+//! }
 //!
 //! for host in hosts.objects {
 //!     println!("{} - {}", host["name"], host["ipv4-address"]);

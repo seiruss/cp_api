@@ -11,10 +11,8 @@ pub enum Error {
     HeaderToStr(reqwest::header::ToStrError),
     Json(serde_json::Error),
     Io(std::io::Error),
-    LogFileNotSet,
-    NoPassword(serde_json::Value),
-    QueryCall(serde_json::Value),
-    Parse(&'static str, serde_json::Value)
+    Parse(&'static str, serde_json::Value),
+    Custom(String)
 }
 
 impl fmt::Display for Error {
@@ -26,12 +24,8 @@ impl fmt::Display for Error {
             HeaderToStr(ref e) => e.fmt(f),
             Json(ref e) => e.fmt(f),
             Io(ref e) => e.fmt(f),
-            LogFileNotSet => write!(f, "Log file is not set"),
-            NoPassword(ref e) => {
-                write!(f, "Failed to get the password to obfuscate from Response: {}", e)
-            },
-            QueryCall(ref e) => write!(f, "Failed to run call in query: {}", e),
-            Parse(ref s, ref e) => write!(f, "Failed to parse {} from Response: {}", s, e)
+            Parse(ref s, ref r) => write!(f, "Failed to parse {} from Response: {}", s, r),
+            Custom(ref s) => write!(f, "{}", s)
         }
     }
 }

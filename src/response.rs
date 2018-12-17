@@ -18,7 +18,8 @@ pub struct Response {
 }
 
 impl Response {
-    // Not for public use
+    // Not for public use.
+    // Use `pub(crate)` when it stabilizes.
     #[doc(hidden)]
     pub fn new() -> Response {
         Response {
@@ -30,7 +31,8 @@ impl Response {
         }
     }
 
-    // Not for public use
+    // Not for public use.
+    // Use `pub(crate)` when it stabilizes.
     #[doc(hidden)]
     pub fn set(reqwest_response: &mut reqwest::Response) -> Result<Response> {
         let mut res = Response::new();
