@@ -1,3 +1,7 @@
+# v0.1.5
+
+- Update doc example.
+
 # v0.1.4
 
 - Added a `Custom` value for generic errors.
