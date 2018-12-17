@@ -20,7 +20,7 @@
 //!     let login_response = client.login("user", "pass")?;
 //!     if login_response.is_not_success() {
 //!     let msg = format!("Failed to login: {}", login_response.data["message"]);
-//!         return Err(Error::Other(msg));
+//!         return Err(Error::Custom(msg));
 //!     }
 //!
 //!     println!("api-server-version: {}, sid: {}", client.api_server_version(), client.sid());
@@ -28,7 +28,7 @@
 //!     let logout_response = client.logout()?;
 //!     if logout_response.is_not_success() {
 //!         let msg = format!("Failed to logout: {}", logout_response.data["message"]);
-//!         return Err(Error::Other(msg));
+//!         return Err(Error::Custom(msg));
 //!
 //!     Ok(())
 //! }
@@ -54,7 +54,7 @@
 //!     if install_response.is_not_success() {
 //!         let msg = format!("Failed to install policy: {}", install_response.data["message"]);
 //!         client.logout()?;
-//!         return Err(Error::Other(msg));
+//!         return Err(Error::Custom(msg));
 //!     }
 //!
 //!     Ok(())
