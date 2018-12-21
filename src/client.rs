@@ -44,6 +44,7 @@ pub struct Client {
     session_timeout: u64,
     domain: String,
     sid: String,
+    uid: String,
     api_server_version: String,
     wait_for_task: bool,
     log_file: String,
@@ -67,6 +68,7 @@ impl Client {
             session_timeout: 600,
             domain: String::new(),
             sid: String::with_capacity(50),
+            uid: String::with_capacity(40),
             api_server_version: String::with_capacity(5),
             wait_for_task: true,
             log_file: String::new(),
@@ -77,7 +79,7 @@ impl Client {
 
     /// Login to the API.
     ///
-    /// If the login is successful, the sid and api-server-version are stored in the Client.
+    /// If the login is successful, the sid, uid, and api-server-version are stored in the Client.
     ///
     /// # Example
     ///
@@ -87,6 +89,8 @@ impl Client {
     /// let login = client.login("user", "pass")?;
     /// assert!(login.is_success());
     /// assert!(!client.sid().is_empty());
+    /// assert!(!client.uid().is_empty());
+    /// assert!(!client.api_server_version().is_empty());
     /// ```
     pub fn login(&mut self, user: &str, pass: &str) -> Result<Response> {
         let payload = json!({
@@ -104,6 +108,11 @@ impl Client {
                 None => return Err(Error::Parse("sid", json!(login)))
             }.to_string();
 
+            self.uid = match login.data["uid"].as_str() {
+                Some(t) => t,
+                None => return Err(Error::Parse("uid", json!(login)))
+            }.to_string();
+
             self.api_server_version = match login.data["api-server-version"].as_str() {
                 Some(t) => t,
                 None => return Err(Error::Parse("api-server-version", json!(login)))
@@ -115,7 +124,8 @@ impl Client {
 
     /// Logout of the API.
     ///
-    /// If the logout was successful, the sid is cleared from the Client.
+    /// If the logout was successful, the sid, uid, and api-server-version are cleared
+    /// from the Client.
     ///
     /// # Example
     ///
@@ -123,12 +133,16 @@ impl Client {
     /// let logout = client.logout()?;
     /// assert!(logout.is_success());
     /// assert!(client.sid().is_empty());
+    /// assert!(client.uid().is_empty());
+    /// assert!(client.api_server_version().is_empty());
     /// ```
     pub fn logout(&mut self) -> Result<Response> {
         let logout = self.call("logout", json!({}))?;
 
         if logout.is_success() {
             self.sid.clear();
+            self.uid.clear();
+            self.api_server_version.clear();
         }
 
         Ok(logout)
@@ -364,6 +378,15 @@ impl Client {
         self.sid.as_str()
     }
 
+    /// Get the uid after logging in.
+    /// ```
+    /// client.login("user", "pass")?;
+    /// println!("{}", client.uid());
+    /// ```
+    pub fn uid(&self) -> &str {
+        self.uid.as_str()
+    }
+
     /// Get the api-server-version after logging in.
     /// ```
     /// client.login("user", "pass")?;
@@ -550,6 +573,7 @@ impl fmt::Debug for Client {
             .field("session_timeout", &self.session_timeout)
             .field("domain", &self.domain)
             .field("sid", &self.sid)
+            .field("uid", &self.uid)
             .field("api_server_version", &self.api_server_version)
             .field("wait_for_task", &self.wait_for_task)
             .field("log_file", &self.log_file)
