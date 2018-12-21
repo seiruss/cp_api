@@ -24,7 +24,7 @@ impl fmt::Display for Error {
             HeaderToStr(ref e) => e.fmt(f),
             Json(ref e) => e.fmt(f),
             Io(ref e) => e.fmt(f),
-            Parse(ref s, ref r) => write!(f, "Failed to parse {} from Response: {}", s, r),
+            Parse(ref s, ref r) => write!(f, "Failed to parse \"{}\" from Response: {}", s, r),
             Custom(ref s) => write!(f, "{}", s)
         }
     }
