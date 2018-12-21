@@ -8,9 +8,13 @@ fn login_logout() {
     let login = client.login("cp_api", "vpn123").unwrap();
     assert!(login.is_success());
     assert!(!client.sid().is_empty());
+    assert!(!client.uid().is_empty());
+    assert!(!client.api_server_version().is_empty());
 
     client.logout().unwrap();
     assert!(client.sid().is_empty());
+    assert!(client.uid().is_empty());
+    assert!(client.api_server_version().is_empty());
 }
 
 #[test]
