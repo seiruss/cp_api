@@ -1,3 +1,13 @@
+# v0.1.6
+
+- Added quotes in a parse error to better show the problem value.
+- Added "uid" to be stored in the Client.
+- Clear api-server-version from the Client on successful logout.
+- Added discard sessions example.
+- Update existing examples.
+- Update login_logout test.
+- Updated doc.
+
 # v0.1.5
 
 - Update doc example.
