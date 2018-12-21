@@ -13,7 +13,11 @@ pub struct Response {
     status: u16,
     url: String,
     headers: HashMap<String, String>,
+
+    /// The Payload from the API after running a call.
     pub data: serde_json::Value,
+
+    /// The Payload from the API after running a query.
     pub objects: Vec<serde_json::Value>,
 }
 
