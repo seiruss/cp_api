@@ -1,12 +1,13 @@
-// cargo run --example show_hosts
+// cargo run --example discard_sessions
 
 use cp_api::{Client, Error};
+use serde_json::json;
 use rpassword;
 use std::process;
 use std::io::{self, Write};
 
 fn main() {
-	println!("Rust Management API Show Hosts Example\n");
+	println!("Rust Management API Discard WEB_API Sessions Example\n");
 
 	let mut client = build_client();
 
@@ -15,8 +16,8 @@ fn main() {
 		process::exit(1);
 	}
 
-	if let Err(e) = show_hosts(&mut client) {
-		eprintln!("Failed to show-hosts: {}", e);
+	if let Err(e) = discard_sessions(&mut client) {
+		eprintln!("Failed to discard sessions: {}", e);
 		logout(&mut client).expect("Failed to logout");
 		process::exit(1);
 	}
@@ -44,7 +45,7 @@ fn build_client() -> Client {
 	// but setting this to true as this is an example
 	client.accept_invalid_certs(true);
 
-    client.log_file("show_hosts.log");
+    client.log_file("discard_sessions.log");
 
 	client
 }
@@ -91,18 +92,47 @@ fn logout(client: &mut Client) -> Result<(), Error> {
 	Ok(())
 }
 
-fn show_hosts(client: &mut Client) -> Result<(), Error> {
-	println!("Querying all hosts...");
+fn discard_sessions(client: &mut Client) -> Result<(), Error> {
+	println!("Querying all sessions...");
 
-	let hosts_res = client.query("show-hosts", "standard")?;
+	let sessions_res = client.query("show-sessions", "full")?;
 
-	if hosts_res.is_not_success() {
-		let msg = format!("{}", hosts_res.data["message"]);
+	if sessions_res.is_not_success() {
+		let msg = format!("{}", sessions_res.data["message"]);
 		return Err(Error::Custom(msg));
 	}
 
-    for host in hosts_res.objects {
-        println!("{} - {}", host["name"], host["ipv4-address"]);
+    for session in sessions_res.objects {
+        // only discard web_api sessions
+        if session["application"] != "WEB_API" {
+            continue;
+        }
+
+        // ignore sessons with changes or locks
+        if session["changes"] != 0 && session["locks"] != 0 {
+            continue;
+        }
+
+        // skip discarding own session until the end
+        if session["uid"] == client.uid() {
+            continue;
+        }
+
+        let discard_res = client.call("discard", json!({"uid": session["uid"]}))?;
+        if discard_res.is_success() {
+            println!("Session {} discarded", session["uid"]);
+        }
+        else {
+            println!("Failed to discard session {}", session["uid"]);
+        }
+    }
+
+    let discard_my_sid = client.call("discard", json!({"uid": client.uid()}))?;
+    if discard_my_sid.is_success() {
+        println!("Discarded my own session");
+    }
+    else {
+        println!("Failed to discard my own session");
     }
 
 	Ok(())
