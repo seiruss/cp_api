@@ -259,7 +259,7 @@ impl Client {
     /// let hosts = client.query("show-hosts", "standard")?;
     /// assert!(hosts.is_success());
     ///
-    /// for host in hosts.objects {
+    /// for host in &hosts.objects {
     ///     println!("{} - {}", host["name"], host["ipv4-address"]);
     /// }
     /// ```
@@ -337,7 +337,7 @@ impl Client {
 
     /// Set the proxy to use.
     ///
-    /// This will proxy all HTTPS traffic to the URL.
+    /// This will proxy all HTTPS traffic to the specified URL.
     /// ```
     /// client.proxy("https://10.1.1.100:8080");
     /// ```
