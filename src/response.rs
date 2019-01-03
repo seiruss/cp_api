@@ -22,10 +22,7 @@ pub struct Response {
 }
 
 impl Response {
-    // Not for public use.
-    // Use `pub(crate)` when it stabilizes.
-    #[doc(hidden)]
-    pub fn new() -> Response {
+    pub(crate) fn new() -> Response {
         Response {
             status: 200,
             url: String::with_capacity(50),
@@ -35,10 +32,7 @@ impl Response {
         }
     }
 
-    // Not for public use.
-    // Use `pub(crate)` when it stabilizes.
-    #[doc(hidden)]
-    pub fn set(reqwest_response: &mut reqwest::Response) -> Result<Response> {
+    pub(crate) fn set(reqwest_response: &mut reqwest::Response) -> Result<Response> {
         let mut res = Response::new();
 
         res.status = reqwest_response.status().as_u16();
