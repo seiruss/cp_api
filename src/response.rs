@@ -127,7 +127,7 @@ impl Response {
     /// # Example
     ///
     /// ```
-    /// let login = c.login("user", "pass")?;
+    /// let login = client.login("user", "pass")?;
     /// println!("{:#?}", login.headers());
     /// ```
     pub fn headers(&self) -> HashMap<String, String> {
