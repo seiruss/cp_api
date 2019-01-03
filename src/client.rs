@@ -57,7 +57,7 @@ impl Client {
     /// ```
     /// let mut client = Client::new("192.168.1.10", 443);
     /// ```
-    pub fn new(server: &str, port: u16) -> Client {
+    pub fn new(server: &str, port: u16) -> Self {
         Client {
             server: String::from(server),
             port,
@@ -105,17 +105,17 @@ impl Client {
         if login.is_success() {
             self.sid = match login.data["sid"].as_str() {
                 Some(t) => t,
-                None => return Err(Error::Parse("sid", json!(login)))
+                None => return Err(Error::InvalidResponse("sid", json!(login)))
             }.to_string();
 
             self.uid = match login.data["uid"].as_str() {
                 Some(t) => t,
-                None => return Err(Error::Parse("uid", json!(login)))
+                None => return Err(Error::InvalidResponse("uid", json!(login)))
             }.to_string();
 
             self.api_server_version = match login.data["api-server-version"].as_str() {
                 Some(t) => t,
-                None => return Err(Error::Parse("api-server-version", json!(login)))
+                None => return Err(Error::InvalidResponse("api-server-version", json!(login)))
             }.to_string();
         }
 
@@ -184,7 +184,7 @@ impl Client {
 
         let mut reqwest_response = reqwest_client.post(url.as_str())
             .json(&payload)
-            .send().map_err(Error::Reqwest)?;
+            .send()?;
 
         let mut res = Response::set(&mut reqwest_response)?;
 
@@ -209,7 +209,7 @@ impl Client {
 
         if !self.sid.is_empty() {
             let n = HeaderName::from_static("x-chkp-sid");
-            let v = HeaderValue::from_str(self.sid.as_str()).map_err(Error::HeaderValue)?;
+            let v = HeaderValue::from_str(self.sid.as_str())?;
 
             headers.insert(n, v);
         }
@@ -219,29 +219,29 @@ impl Client {
 
     // Build the reqwest client
     fn build_client(&self, headers: HeaderMap) -> Result<reqwest::Client> {
-        let mut cb = reqwest::ClientBuilder::new();
-        cb = cb.default_headers(headers);
-        cb = cb.timeout(self.connect_timeout);
+        let mut builder = reqwest::ClientBuilder::new();
+        builder = builder.default_headers(headers);
+        builder = builder.timeout(self.connect_timeout);
 
         if !self.proxy.is_empty() {
-            cb = cb.proxy(reqwest::Proxy::https(self.proxy.as_str()).map_err(Error::Reqwest)?);
+            builder = builder.proxy(reqwest::Proxy::https(self.proxy.as_str())?);
         }
 
         if self.accept_invalid_certs == true && self.certificate.is_empty() {
-            cb = cb.danger_accept_invalid_certs(true);
+            builder = builder.danger_accept_invalid_certs(true);
         }
 
         if !self.certificate.is_empty() {
             let mut buf: Vec<u8> = Vec::new();
-            File::open(self.certificate.as_str()).map_err(Error::Io)?
-                .read_to_end(&mut buf).map_err(Error::Io)?;
+            File::open(self.certificate.as_str())?
+                .read_to_end(&mut buf)?;
 
-            let cert = reqwest::Certificate::from_der(&buf).map_err(Error::Reqwest)?;
-            cb = cb.add_root_certificate(cert);
-            cb = cb.danger_accept_invalid_certs(false);
+            let cert = reqwest::Certificate::from_der(&buf)?;
+            builder = builder.add_root_certificate(cert);
+            builder = builder.danger_accept_invalid_certs(false);
         }
 
-        let client = cb.build().map_err(Error::Reqwest)?;
+        let client = builder.build()?;
 
         Ok(client)
     }
@@ -290,17 +290,17 @@ impl Client {
 
             to = match res.data["to"].as_u64() {
                 Some(t) => t,
-                None => return Err(Error::Parse("to", json!(res)))
+                None => return Err(Error::InvalidResponse("to", json!(res)))
             };
 
             total = match res.data["total"].as_u64() {
                 Some(t) => t,
-                None => return Err(Error::Parse("total", json!(res)))
+                None => return Err(Error::InvalidResponse("total", json!(res)))
             };
 
             let mut objects = match res.data["objects"].as_array_mut() {
                 Some(t) => t,
-                None => return Err(Error::Parse("objects", json!(res)))
+                None => return Err(Error::InvalidResponse("objects", json!(res)))
             };
 
             vec.append(&mut objects);
@@ -427,12 +427,12 @@ impl Client {
 
             let percent = match _res.data["tasks"][0].get("progress-percentage") {
                 Some(t) => t,
-                None => return Err(Error::Parse("progress-percentage", json!(_res)))
+                None => return Err(Error::InvalidResponse("progress-percentage", json!(_res)))
             };
 
             let status = match _res.data["tasks"][0].get("status") {
                 Some(t) => t,
-                None => return Err(Error::Parse("status", json!(_res)))
+                None => return Err(Error::InvalidResponse("status", json!(_res)))
             };
 
             println!("{} {} - {}%", command, status, percent);
@@ -484,7 +484,7 @@ impl Client {
 
         for (k, v) in headers.iter() {
             let k = k.as_str().to_string();
-            let v = v.to_str().map_err(Error::HeaderToStr)?;
+            let v = v.to_str()?;
             let v = v.to_string();
 
             map.insert(k, v);
@@ -521,15 +521,15 @@ impl Client {
             return Err(Error::Custom(msg));
         }
 
-        let mut f = File::create(self.log_file.as_str()).map_err(Error::Io)?;
+        let mut f = File::create(self.log_file.as_str())?;
 
         // Save all_calls with an indent of 4 spaces instead of 2 (the default)
         let buf = Vec::new();
         let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
         let mut ser = serde_json::Serializer::with_formatter(buf, formatter);
 
-        self.all_calls.serialize(&mut ser).map_err(Error::Json)?;
-        f.write_all(&ser.into_inner()).map_err(Error::Io)?;
+        self.all_calls.serialize(&mut ser)?;
+        f.write_all(&ser.into_inner())?;
 
         self.all_calls.clear();
         self.log_file.clear();
@@ -555,6 +555,9 @@ impl Drop for Client {
     fn drop(&mut self) {
         if !self.sid.is_empty() {
             if let Err(e) = self.logout() {
+                // A panic isn't ideal since the Client is being dropped and can't be used anymore.
+                // Printing an error message isn't ideal either.
+                // Best to always call logout and handle any errors manually.
                 eprintln!("Error logging out while dropping the Client: {}", e);
             }
         }

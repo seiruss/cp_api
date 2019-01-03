@@ -7,7 +7,7 @@ use serde_json::json;
 use serde::Serialize;
 use serde_derive::Serialize;
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 
 /// A Response from the API.
 #[derive(Debug, Serialize)]
@@ -39,14 +39,14 @@ impl Response {
 
         res.status = reqwest_response.status().as_u16();
         res.url = reqwest_response.url().to_string();
-        res.data = reqwest_response.json().map_err(Error::Reqwest)?;
+        res.data = reqwest_response.json()?;
 
         let reqwest_headers = reqwest_response.headers();
         let mut map = HashMap::new();
 
         for (k, v) in reqwest_headers.iter() {
             let k = k.as_str().to_string();
-            let v = v.to_str().map_err(Error::HeaderToStr)?;
+            let v = v.to_str()?;
             let v = v.to_string();
 
             map.insert(k, v);
@@ -157,6 +157,7 @@ impl Response {
 
 impl fmt::Display for Response {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Print objects with an indent of 4 spaces instead of 2 (the default)
         let buf = Vec::new();
         let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
         let mut ser = serde_json::Serializer::with_formatter(buf, formatter);
