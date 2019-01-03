@@ -1,5 +1,7 @@
-use std::fmt;
 use std::collections::HashMap;
+use std::fmt;
+use std::fs::File;
+use std::io::Write;
 
 use serde_json::json;
 use serde::Serialize;
@@ -130,6 +132,26 @@ impl Response {
     /// ```
     pub fn headers(&self) -> HashMap<String, String> {
         self.headers.clone()
+    }
+
+    /// Save objects from a query to a file.
+    ///
+    /// ```
+    /// let hosts = client.query("show-hosts", "standard")?;
+    /// hosts.save_objects("/home/admin/objects.txt")?;
+    /// ```
+    pub fn save_objects(&self, file: &str) -> Result<()> {
+        let mut f = File::create(file)?;
+
+        // Save objects with an indent of 4 spaces instead of 2 (the default)
+        let buf = Vec::new();
+        let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
+        let mut ser = serde_json::Serializer::with_formatter(buf, formatter);
+
+        self.objects.serialize(&mut ser)?;
+        f.write_all(&ser.into_inner())?;
+
+        Ok(())
     }
 }
 
