@@ -1,6 +1,6 @@
 // cargo run --example show_hosts
 
-use cp_api::{Client, Error};
+use cp_api::{Client, Error, Result};
 use rpassword;
 use std::process;
 use std::io::{self, Write};
@@ -8,35 +8,28 @@ use std::io::{self, Write};
 fn main() {
     println!("Rust Management API Show Hosts Example\n");
 
-    let mut client = build_client();
-
-    if let Err(e) = login(&mut client) {
-        eprintln!("Failed to login: {}", e);
-        process::exit(1);
-    }
-
-    if let Err(e) = show_hosts(&mut client) {
-        eprintln!("Failed to show-hosts: {}", e);
-        logout(&mut client).expect("Failed to logout");
-        process::exit(1);
-    }
-
-    if let Err(e) = logout(&mut client) {
-        eprintln!("Failed to logout: {}", e);
-        process::exit(1);
-    }
-
-    if let Err(e) = client.save_log() {
-        eprintln!("Failed to save log file: {}", e);
+    if let Err(e) = run() {
+        eprintln!("Error: {}", e);
         process::exit(1);
     }
 }
 
-fn build_client() -> Client {
-    let server = get_input("Enter server IP or name: ");
+fn run() -> Result<()> {
+    let mut client = build_client()?;
 
-    let port = get_input("Enter server port: ");
-    let port: u16 = port.parse().expect("Failed to convert port from String to u16");
+    login(&mut client)?;
+    show_hosts(&mut client)?;
+    logout(&mut client)?;
+    client.save_log()?;
+
+    Ok(())
+}
+
+fn build_client() -> Result<Client> {
+    let server = get_input("Enter server IP or name: ")?;
+
+    let port = get_input("Enter server port: ")?;
+    let port: u16 = port.parse()?;
 
     let mut client = Client::new(server.as_str(), port);
 
@@ -46,64 +39,68 @@ fn build_client() -> Client {
 
     client.log_file("show_hosts.log");
 
-    client
+    Ok(client)
 }
 
-fn get_input(msg: &str) -> String {
+fn get_input(msg: &str) -> Result<String> {
     print!("{}", msg);
-    io::stdout().flush().expect("Failed to flush stdout buffer");
+    io::stdout().flush()?;
 
     let mut s = String::new();
-    io::stdin().read_line(&mut s).expect("Failed to read from stdin");
+    io::stdin().read_line(&mut s)?;
 
-    s.trim().to_string()
+    let s = s.trim().to_string();
+
+    Ok(s)
 }
 
-fn login(client: &mut Client) -> Result<(), Error> {
-    let user = get_input("Enter username: ");
+fn login(client: &mut Client) -> Result<()> {
+    let user = get_input("Enter username: ")?;
 
     print!("Enter password (will not be shown on screen): ");
-    io::stdout().flush().expect("Failed to flush stdout buffer");
-    let pass = rpassword::read_password().expect("Failed to read password");
+    io::stdout().flush()?;
+    let pass = rpassword::read_password()?;
 
     println!("\n\nLogging into the API...\n");
 
     let login_res = client.login(user.as_str(), pass.as_str())?;
 
     if login_res.is_not_success() {
-        let msg = format!("{}", login_res.data["message"]);
+        let msg = format!("Failed to login: {}", login_res.data["message"]);
         return Err(Error::Custom(msg));
     }
 
     Ok(())
 }
 
-fn logout(client: &mut Client) -> Result<(), Error> {
+fn logout(client: &mut Client) -> Result<()> {
     println!("Logging out...");
 
     let logout_res = client.logout()?;
 
     if logout_res.is_not_success() {
-        let msg = format!("{}", logout_res.data["message"]);
+        let msg = format!("Failed to logout: {}", logout_res.data["message"]);
         return Err(Error::Custom(msg));
     }
 
     Ok(())
 }
 
-fn show_hosts(client: &mut Client) -> Result<(), Error> {
+fn show_hosts(client: &mut Client) -> Result<()> {
     println!("Querying all hosts...");
 
     let hosts_res = client.query("show-hosts", "standard")?;
 
     if hosts_res.is_not_success() {
-        let msg = format!("{}", hosts_res.data["message"]);
+        let msg = format!("Failed to show-hosts: {}", hosts_res.data["message"]);
         return Err(Error::Custom(msg));
     }
 
-    for host in hosts_res.objects {
+    for host in &hosts_res.objects {
         println!("{} - {}", host["name"], host["ipv4-address"]);
     }
+
+    hosts_res.save_objects("hosts.log")?;
 
     Ok(())
 }
