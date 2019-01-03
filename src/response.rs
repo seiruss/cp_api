@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::fmt;
 use std::fs::File;
 use std::io::Write;
 
@@ -152,22 +151,5 @@ impl Response {
         f.write_all(&ser.into_inner())?;
 
         Ok(())
-    }
-}
-
-impl fmt::Display for Response {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // Print objects with an indent of 4 spaces instead of 2 (the default)
-        let buf = Vec::new();
-        let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
-        let mut ser = serde_json::Serializer::with_formatter(buf, formatter);
-
-        self.objects.serialize(&mut ser).unwrap();
-        let s = match String::from_utf8(ser.into_inner()) {
-            Ok(t) => t,
-            Err(_) => String::from("Error printing Response objects due to invalid UTF-8 bytes")
-        };
-
-        write!(f, "{}", s)
     }
 }
