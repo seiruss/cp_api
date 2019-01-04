@@ -136,7 +136,7 @@ impl Response {
     /// Save data from a call to a file.
     ///
     /// ```
-    /// client.call("show-host", json!({"name": "host1"}))?;
+    /// let host = client.call("show-host", json!({"name": "host1"}))?;
     /// host.save_data("/home/admin/host.txt")?;
     /// ```
     pub fn save_data(&self, file: &str) -> Result<()> {
@@ -157,7 +157,7 @@ impl Response {
     ///
     /// ```
     /// let hosts = client.query("show-hosts", "standard")?;
-    /// hosts.save_objects("/home/admin/objects.txt")?;
+    /// hosts.save_objects("/home/admin/hosts.txt")?;
     /// ```
     pub fn save_objects(&self, file: &str) -> Result<()> {
         let mut f = File::create(file)?;
