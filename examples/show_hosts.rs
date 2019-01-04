@@ -1,6 +1,6 @@
 // cargo run --example show_hosts
 
-use cp_api::{Client, Error, Result};
+use cp_api::{Client, Error};
 use rpassword;
 use std::process;
 use std::io::{self, Write};
@@ -14,7 +14,7 @@ fn main() {
     }
 }
 
-fn run() -> Result<()> {
+fn run() -> Result<(), Error> {
     let mut client = build_client()?;
 
     login(&mut client)?;
@@ -25,7 +25,7 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn build_client() -> Result<Client> {
+fn build_client() -> Result<Client, Error> {
     let server = get_input("Enter server IP or name: ")?;
 
     let port = get_input("Enter server port: ")?;
@@ -42,7 +42,7 @@ fn build_client() -> Result<Client> {
     Ok(client)
 }
 
-fn get_input(msg: &str) -> Result<String> {
+fn get_input(msg: &str) -> Result<String, Error> {
     print!("{}", msg);
     io::stdout().flush()?;
 
@@ -54,7 +54,7 @@ fn get_input(msg: &str) -> Result<String> {
     Ok(s)
 }
 
-fn login(client: &mut Client) -> Result<()> {
+fn login(client: &mut Client) -> Result<(), Error> {
     let user = get_input("Enter username: ")?;
 
     print!("Enter password (will not be shown on screen): ");
@@ -73,7 +73,7 @@ fn login(client: &mut Client) -> Result<()> {
     Ok(())
 }
 
-fn logout(client: &mut Client) -> Result<()> {
+fn logout(client: &mut Client) -> Result<(), Error> {
     println!("Logging out...");
 
     let logout_res = client.logout()?;
@@ -86,13 +86,14 @@ fn logout(client: &mut Client) -> Result<()> {
     Ok(())
 }
 
-fn show_hosts(client: &mut Client) -> Result<()> {
+fn show_hosts(client: &mut Client) -> Result<(), Error> {
     println!("Querying all hosts...");
 
     let hosts_res = client.query("show-hosts", "standard")?;
 
     if hosts_res.is_not_success() {
         let msg = format!("Failed to show-hosts: {}", hosts_res.data["message"]);
+        logout(&mut client)?;
         return Err(Error::Custom(msg));
     }
 
