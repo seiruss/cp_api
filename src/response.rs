@@ -8,17 +8,17 @@ use serde_derive::Serialize;
 
 use crate::error::Result;
 
-/// A Response from the API.
+/// A Response from the API. The content returned varies depending on which command was called.
 #[derive(Debug, Serialize)]
 pub struct Response {
     status: u16,
     url: String,
     headers: HashMap<String, String>,
 
-    /// The Payload from the API after running a call.
+    /// Contains the JSON value from the API after running a call.
     pub data: serde_json::Value,
 
-    /// The Payload from the API after running a query.
+    /// Contains the JSON value from the API after running a query.
     pub objects: Vec<serde_json::Value>,
 }
 
@@ -133,6 +133,26 @@ impl Response {
         self.headers.clone()
     }
 
+    /// Save data from a call to a file.
+    ///
+    /// ```
+    /// client.call("show-host", json!({"name": "host1"}))?;
+    /// host.save_data("/home/admin/host.txt")?;
+    /// ```
+    pub fn save_data(&self, file: &str) -> Result<()> {
+        let mut f = File::create(file)?;
+
+        // Save with an indent of 4 spaces instead of 2 (the default)
+        let buf = Vec::new();
+        let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
+        let mut ser = serde_json::Serializer::with_formatter(buf, formatter);
+
+        self.data.serialize(&mut ser)?;
+        f.write_all(&ser.into_inner())?;
+
+        Ok(())
+    }
+
     /// Save objects from a query to a file.
     ///
     /// ```
@@ -142,7 +162,7 @@ impl Response {
     pub fn save_objects(&self, file: &str) -> Result<()> {
         let mut f = File::create(file)?;
 
-        // Save objects with an indent of 4 spaces instead of 2 (the default)
+        // Save with an indent of 4 spaces instead of 2 (the default)
         let buf = Vec::new();
         let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
         let mut ser = serde_json::Serializer::with_formatter(buf, formatter);
