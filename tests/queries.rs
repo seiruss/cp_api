@@ -13,4 +13,6 @@ fn show_hosts() {
     for host in hosts.objects {
         println!("{} - {}", host["name"], host["ipv4-address"]);
     }
+
+    hosts.save_objects("hosts.log")?;
 }

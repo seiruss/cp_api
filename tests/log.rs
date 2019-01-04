@@ -22,3 +22,14 @@ fn show_password_test() {
     client.logout().unwrap();
     client.save_log().unwrap();
 }
+
+#[test]
+fn save_call_data() {
+    let mut client = Client::new("172.25.199.80", 443);
+    client.accept_invalid_certs(true);
+
+    client.login("cp_api", "vpn123").unwrap();
+    let host = client.call("show-host", json!({"name": "host1"})).unwrap();
+    host.save_data("host.log").unwrap();
+    client.logout().unwrap();
+}
