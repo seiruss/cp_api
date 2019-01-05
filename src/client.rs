@@ -20,8 +20,6 @@ use crate::error::{Error, Result};
 ///
 /// The Client should be created and reused for multiple API calls.
 ///
-/// # Example
-///
 /// ```
 /// use cp_api::Client;
 /// use serde_json::json;
@@ -81,16 +79,11 @@ impl Client {
     ///
     /// If the login is successful, the sid, uid, and api-server-version are stored in the Client.
     ///
-    /// # Example
-    ///
     /// ```
     /// let mut client = Client::new("192.168.1.10", 443);
     /// client.certificate("/home/admin/cert.cer");
     /// let login = client.login("user", "pass")?;
     /// assert!(login.is_success());
-    /// assert!(!client.sid().is_empty());
-    /// assert!(!client.uid().is_empty());
-    /// assert!(!client.api_server_version().is_empty());
     /// ```
     pub fn login(&mut self, user: &str, pass: &str) -> Result<Response> {
         let payload = json!({
@@ -127,14 +120,9 @@ impl Client {
     /// If the logout was successful, the sid, uid, and api-server-version are cleared
     /// from the Client.
     ///
-    /// # Example
-    ///
     /// ```
     /// let logout = client.logout()?;
     /// assert!(logout.is_success());
-    /// assert!(client.sid().is_empty());
-    /// assert!(client.uid().is_empty());
-    /// assert!(client.api_server_version().is_empty());
     /// ```
     pub fn logout(&mut self) -> Result<Response> {
         let logout = self.call("logout", json!({}))?;
@@ -149,8 +137,6 @@ impl Client {
     }
 
     /// Perform an API call.
-    ///
-    /// # Examples
     ///
     /// ```
     /// let host_payload = json!({
@@ -253,8 +239,6 @@ impl Client {
     ///
     /// A vector of all the objects will be stored in the Response objects field.
     ///
-    /// # Example
-    ///
     /// ```
     /// let hosts = client.query("show-hosts", "standard")?;
     /// assert!(hosts.is_success());
@@ -283,7 +267,7 @@ impl Client {
 
             if res.is_not_success() {
                 let msg = format!("Received an unsuccessful Response from the API \
-                                   while running a query. {}, {}",
+                                   while running a query. Error code: {}, message: {}",
                                    res.data["code"], res.data["message"]);
                 return Err(Error::Custom(msg));
             }

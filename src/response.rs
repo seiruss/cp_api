@@ -8,7 +8,7 @@ use serde_derive::Serialize;
 
 use crate::error::Result;
 
-/// A Response from the API. The content returned varies depending on which command was called.
+/// A Response from the API.
 #[derive(Debug, Serialize)]
 pub struct Response {
     status: u16,
@@ -60,12 +60,10 @@ impl Response {
     ///
     /// Reference: [IANA HTTP Status Codes][ref]
     ///
-    /// # Example
-    ///
     /// ```
     /// let res = client.call("show-host", json!({"name": "host1"}))?;
     /// if res.is_success() {
-    ///     println!("host1 IP = {}", res.body["ipv4-address"]);
+    ///     println!("host1 IP = {}", res.data["ipv4-address"]);
     /// }
     /// else if res.is_client_error() {
     ///     eprintln!("Client error");
@@ -111,8 +109,6 @@ impl Response {
 
     /// Get the URL of this Response.
     ///
-    /// # Example
-    ///
     /// ```
     /// let res = client.call("show-host", json!({"name": "host1"}))?;
     /// assert_eq!(res.url() "https://192.168.1.10/web_api/show-host")
@@ -122,8 +118,6 @@ impl Response {
     }
 
     /// Get the headers of this Response.
-    ///
-    /// # Example
     ///
     /// ```
     /// let login = client.login("user", "pass")?;
