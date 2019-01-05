@@ -105,7 +105,7 @@ fn install(client: &mut Client) -> Result<(), Error> {
 
     if install_res.is_not_success() {
         let msg = format!("Failed to run install-policy: {}", install_res.data["message"]);
-        logout(&mut client)?;
+        logout(client)?;
         return Err(Error::Custom(msg));
     }
 

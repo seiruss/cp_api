@@ -94,7 +94,7 @@ fn discard_sessions(client: &mut Client) -> Result<(), Error> {
 
     if sessions_res.is_not_success() {
         let msg = format!("{}", sessions_res.data["message"]);
-        logout(&mut client)?;
+        logout(client)?;
         return Err(Error::Custom(msg));
     }
 

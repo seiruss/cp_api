@@ -93,7 +93,7 @@ fn show_hosts(client: &mut Client) -> Result<(), Error> {
 
     if hosts_res.is_not_success() {
         let msg = format!("Failed to show-hosts: {}", hosts_res.data["message"]);
-        logout(&mut client)?;
+        logout(client)?;
         return Err(Error::Custom(msg));
     }
 
