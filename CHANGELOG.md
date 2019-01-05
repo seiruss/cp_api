@@ -1,3 +1,10 @@
+# v0.2.0
+
+- Improved error handling for easier propagation.
+- Added methods to save Response data and objects to a file.
+- Removed Display for Response objects in favor of the save_objects method.
+- Improved documentation to get started.
+
 # v0.1.6
 
 - Added quotes in a parse error to better show the problem value.
