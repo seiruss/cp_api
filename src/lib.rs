@@ -5,76 +5,56 @@
 //! This handles the Web Services communcation by creating a Client to send
 //! a Request and then receive a Response.
 //!
-//! ## Login
-//!
-//! An example logging in and logging out of the API.
+//! ## Getting Started
 //!
 //! ```
-//! use cp_api::{Client, Error};
-//! use serde_json::json;
+//! // Build a Client.
+//! let mut client = Client::new("192.168.1.10", 443);
 //!
-//! fn example() -> Result<(), Error> {
-//!     let mut client = Client::new("192.168.1.10", 443);
-//!     client.certificate("/home/admin/cert.cer");
+//! // Set a binary DER encoded certificate.
+//! client.certificate("/home/admin/cert.cer");
 //!
-//!     let login_response = client.login("user", "pass")?;
-//!     if login_response.is_not_success() {
-//!     let msg = format!("Failed to login: {}", login_response.data["message"]);
-//!         return Err(Error::Custom(msg));
-//!     }
-//!
-//!     println!("api-server-version: {}, sid: {}", client.api_server_version(), client.sid());
-//!
-//!     let logout_response = client.logout()?;
-//!     if logout_response.is_not_success() {
-//!         let msg = format!("Failed to logout: {}", logout_response.data["message"]);
-//!         return Err(Error::Custom(msg));
-//!
-//!     Ok(())
-//! }
-//! ```
-//!
-//! ## Install Policy
-//!
-//! An example installing policy to a Security Gateway.
-//!
-//! ```
-//! use cp_api::{Client, Error};
-//! use serde_json::json;
-//!
-//! fn install_policy(mut client: Client) -> Result<(), Error> {
-//!     let payload = json!({
-//!         "policy-package": "Standard",
-//!         "access": true,
-//!         "targets": "Gateway1"
-//!     });
-//!
-//!     let install_response = client.call("install-policy", payload)?;
-//!
-//!     if install_response.is_not_success() {
-//!         let msg = format!("Failed to install policy: {}", install_response.data["message"]);
-//!         client.logout()?;
-//!         return Err(Error::Custom(msg));
-//!     }
-//!
-//!     Ok(())
-//! }
-//! ```
-//!
-//! ## Show hosts
-//!
-//! An example retrieving all host objects then print their names and IP addresses.
-//!
-//! ```
-//! let hosts = client.query("show-hosts", "standard")?;
-//!
-//! if hosts_res.is_not_success() {
-//!     let msg = format!("Failed to run show-hosts: {}", hosts_res.data["message"]);
+//! // Login to the API.
+//! let login = client.login("user", "pass")?;
+//! if login.is_not_success() {
+//!     let msg = format!("Failed to login: {}", login.data["message"]);
 //!     return Err(Error::Custom(msg));
 //! }
 //!
-//! for host in hosts.objects {
+//! // Perform an API call to add a new host object.
+//! let payload = json!({
+//!     "name": "host1",
+//!     "ip-address": "172.25.1.50"
+//! });
+//! let add_host = client.call("add-host", payload)?;
+//! if add_host.is_not_success() {
+//!     let msg = format!("Failed to add-host: {}", add_host.data["message"]);
+//!     return Err(Error::Custom(msg));
+//! }
+//!
+//! // Show that added host.
+//! let host1 = client.call("show-host", json!({"name": "host1"}))?;
+//! if host1.is_not_success() {
+//!     let msg = format!("Failed to show-host: {}", host1.data["message"]);
+//!     return Err(Error::Custom(msg));
+//! }
+//! println!("{} - {}", host1.data["name"], host1.data["ipv4-address"]);
+//!
+//! // Peform an API query to show all the host objects.
+//! let all_hosts = client.query("show-hosts", "standard")?;
+//! if all_hosts.is_not_success() {
+//!     let msg = format!("Failed to show-hosts: {}", all_hosts.data["message"]);
+//!     return Err(Error::Custom(msg));
+//! }
+//! for host in &all_hosts.objects {
 //!     println!("{} - {}", host["name"], host["ipv4-address"]);
+//! }
+//!
+//! // Logout of the API.
+//! let logout = client.logout()?;
+//! if logout.is_not_success() {
+//!     let msg = format!("Failed to logout: {}", logout.data["message"]);
+//!     return Err(Error::Custom(msg));
 //! }
 //! ```
 //! [ref]: https://sc1.checkpoint.com/documents/latest/APIs/index.html
