@@ -66,15 +66,15 @@ impl StdError for Error {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
         use self::Error::*;
         match self {
-            Reqwest(ref e) => e.cause(),
-            HeaderValue(ref e) => e.cause(),
-            HeaderToStr(ref e) => e.cause(),
-            Json(ref e) => e.cause(),
-            Io(ref e) => e.cause(),
-            ParseInt(ref e) => e.cause(),
+            Reqwest(_) => None,
+            HeaderValue(ref e) => e.source(),
+            HeaderToStr(ref e) => e.source(),
+            Json(ref e) => e.source(),
+            Io(ref e) => e.source(),
+            ParseInt(ref e) => e.source(),
             InvalidResponse(_, _) |
             Custom(_) => None,
         }
