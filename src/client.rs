@@ -313,7 +313,7 @@ impl Client {
     ///
     /// The default is false to not accept invalid certificates.
     /// ```
-    /// client.accept_invalid_cert(true);
+    /// client.accept_invalid_certs(true);
     /// ```
     pub fn accept_invalid_certs(&mut self, b: bool) {
         self.accept_invalid_certs = b;
