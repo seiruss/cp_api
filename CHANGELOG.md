@@ -1,3 +1,9 @@
+# v0.3.0
+
+- Removed error cause method as it was deprecated and replaced it with source.
+- Improved error message if Response JSON is invalid.
+- Update doc syntax error for accept_invalid_certs.
+
 # v0.2.0
 
 - Improved error handling for easier propagation.
