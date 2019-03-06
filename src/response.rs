@@ -6,7 +6,7 @@ use serde_json::json;
 use serde::Serialize;
 use serde_derive::Serialize;
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 
 /// A Response from the API.
 #[derive(Debug, Serialize)]
@@ -38,7 +38,15 @@ impl Response {
 
         res.status = reqwest_response.status().as_u16();
         res.url = reqwest_response.url().to_string();
-        res.data = reqwest_response.json()?;
+
+        res.data = match reqwest_response.json() {
+            Ok(t) => t,
+            Err(e) => {
+                let msg = format!("Response body received is not valid JSON. \
+                                   Error code: {}, message: {}", res.status(), e);
+                return Err(Error::Custom(msg));
+            }
+        };
 
         let reqwest_headers = reqwest_response.headers();
         let mut map = HashMap::new();
