@@ -3,6 +3,7 @@
 use cp_api::{Client, Error};
 use serde_json::json;
 use rpassword;
+use std::error::Error as StdError;
 use std::process;
 use std::io::{self, Write};
 
@@ -11,6 +12,10 @@ fn main() {
 
     if let Err(e) = run() {
         eprintln!("Error: {}", e);
+        eprintln!("Description: {}", e.description());
+        if e.source().is_some() {
+            eprintln!("Source: {}", e.source().unwrap());
+        }
         process::exit(1);
     }
 }
@@ -64,7 +69,13 @@ fn login(client: &mut Client) -> Result<(), Error> {
 
     println!("\n\nLogging into the API...\n");
 
-    let login_res = client.login(user.as_str(), pass.as_str())?;
+    let login_res = match client.login(user.as_str(), pass.as_str()) {
+        Ok(t) => t,
+        Err(e) => {
+            let msg = format!("Failed to run login: {}", e);
+            return Err(Error::Custom(msg));
+        }
+    };
 
     if login_res.is_not_success() {
         let msg = format!("Failed to login: {}", login_res.data["message"]);
@@ -77,7 +88,13 @@ fn login(client: &mut Client) -> Result<(), Error> {
 fn logout(client: &mut Client) -> Result<(), Error> {
     println!("Logging out...");
 
-    let logout_res = client.logout()?;
+    let logout_res = match client.logout() {
+        Ok(t) => t,
+        Err(e) => {
+            let msg = format!("Failed to run logout: {}", e);
+            return Err(Error::Custom(msg));
+        }
+    };
 
     if logout_res.is_not_success() {
         let msg = format!("Failed to logout: {}", logout_res.data["message"]);
@@ -101,7 +118,13 @@ fn install(client: &mut Client) -> Result<(), Error> {
 
     println!("\nInstalling {} to {}\n", policy, gateway);
 
-    let install_res = client.call("install-policy", payload)?;
+    let install_res = match client.call("install-policy", payload) {
+        Ok(t) => t,
+        Err(e) => {
+            let msg = format!("Failed to run install-policy: {}", e);
+            return Err(Error::Custom(msg));
+        }
+    };
 
     if install_res.is_not_success() {
         let msg = format!("Failed to run install-policy: {}", install_res.data["message"]);
