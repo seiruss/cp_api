@@ -2,7 +2,7 @@
 
 [crates.io]: https://crates.io/crates/cp_api
 [Version]: https://img.shields.io/crates/v/cp_api.svg
-[Rustc Version 1.13+]: https://img.shields.io/badge/rustc-1.31+-lightgray.svg
+[Rustc Version 1.31+]: https://img.shields.io/badge/rustc-1.31+-lightgray.svg
 [rustc]: https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018.html
 
 The **cp_api** crate provides a simple way to use the Check Point Management API.
