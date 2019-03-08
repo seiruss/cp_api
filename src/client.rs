@@ -42,6 +42,7 @@ pub struct Client {
     session_timeout: u64,
     domain: String,
     read_only: bool,
+    continue_last_session: bool,
     sid: String,
     uid: String,
     api_server_version: String,
@@ -67,6 +68,7 @@ impl Client {
             session_timeout: 600,
             domain: String::new(),
             read_only: false,
+            continue_last_session: false,
             sid: String::with_capacity(50),
             uid: String::with_capacity(40),
             api_server_version: String::with_capacity(5),
@@ -80,7 +82,7 @@ impl Client {
     /// Login to the API.
     ///
     /// If the login is successful, the uid and api-server-version are stored in the Client.
-    /// If the session is not read-only, the sid will be stored as well.
+    /// If the session is not read only, the sid will be stored as well.
     ///
     /// ```
     /// let mut client = Client::new("192.168.1.10", 443);
@@ -95,6 +97,7 @@ impl Client {
             "domain": self.domain,
             "session-timeout": self.session_timeout,
             "read-only": self.read_only,
+            "continue-last-session": self.continue_last_session,
         });
 
         let login = self.call("login", payload)?;
@@ -367,6 +370,14 @@ impl Client {
         self.read_only = b;
     }
 
+    /// Set to true to continue the last session. Default is false.
+    /// ```
+    /// client.continue_last_session(true);
+    /// ```
+    pub fn continue_last_session(&mut self, b: bool) {
+        self.continue_last_session = b;
+    }
+
     /// Get the sid after logging in.
     /// ```
     /// client.login("user", "pass")?;
@@ -574,6 +585,7 @@ impl fmt::Debug for Client {
             .field("session_timeout", &self.session_timeout)
             .field("domain", &self.domain)
             .field("read_only", &self.read_only)
+            .field("continue_last_session", &self.continue_last_session)
             .field("sid", &self.sid)
             .field("uid", &self.uid)
             .field("api_server_version", &self.api_server_version)
