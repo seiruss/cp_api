@@ -1,8 +1,13 @@
+# v0.3.1
+
+- Added `Client::read_only()` option to login.
+- Added `Client::continue_last_session()` option to login.
+
 # v0.3.0
 
 - Removed error cause method as it was deprecated and replaced it with source.
 - Improved error message if Response JSON is invalid.
-- Update doc syntax error for accept_invalid_certs.
+- Update doc syntax error for `Client::accept_invalid_certs()`.
 
 # v0.2.0
 
