@@ -2,7 +2,6 @@
 
 use cp_api::{Client, Error};
 use rpassword;
-use std::error::Error as StdError;
 use std::process;
 use std::io::{self, Write};
 
@@ -11,10 +10,6 @@ fn main() {
 
     if let Err(e) = run() {
         eprintln!("Error: {}", e);
-        eprintln!("Description: {}", e.description());
-        if e.source().is_some() {
-            eprintln!("Source: {}", e.source().unwrap());
-        }
         process::exit(1);
     }
 }
