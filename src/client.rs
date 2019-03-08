@@ -41,6 +41,7 @@ pub struct Client {
     connect_timeout: time::Duration,
     session_timeout: u64,
     domain: String,
+    read_only: bool,
     sid: String,
     uid: String,
     api_server_version: String,
@@ -65,6 +66,7 @@ impl Client {
             connect_timeout: time::Duration::from_secs(30),
             session_timeout: 600,
             domain: String::new(),
+            read_only: false,
             sid: String::with_capacity(50),
             uid: String::with_capacity(40),
             api_server_version: String::with_capacity(5),
@@ -77,7 +79,8 @@ impl Client {
 
     /// Login to the API.
     ///
-    /// If the login is successful, the sid, uid, and api-server-version are stored in the Client.
+    /// If the login is successful, the uid and api-server-version are stored in the Client.
+    /// If the session is not read-only, the sid will be stored as well.
     ///
     /// ```
     /// let mut client = Client::new("192.168.1.10", 443);
@@ -91,6 +94,7 @@ impl Client {
             "password": pass,
             "domain": self.domain,
             "session-timeout": self.session_timeout,
+            "read-only": self.read_only,
         });
 
         let login = self.call("login", payload)?;
@@ -101,15 +105,17 @@ impl Client {
                 None => return Err(Error::InvalidResponse("sid", json!(login)))
             }.to_string();
 
-            self.uid = match login.data["uid"].as_str() {
-                Some(t) => t,
-                None => return Err(Error::InvalidResponse("uid", json!(login)))
-            }.to_string();
-
             self.api_server_version = match login.data["api-server-version"].as_str() {
                 Some(t) => t,
                 None => return Err(Error::InvalidResponse("api-server-version", json!(login)))
             }.to_string();
+
+            if !self.read_only {
+                self.uid = match login.data["uid"].as_str() {
+                    Some(t) => t,
+                    None => return Err(Error::InvalidResponse("uid", json!(login)))
+                }.to_string();
+            }
         }
 
         Ok(login)
@@ -353,6 +359,14 @@ impl Client {
         self.domain = s.to_string();
     }
 
+    /// Set to true to login with read only permissions. Default is false.
+    /// ```
+    /// client.read_only(true);
+    /// ```
+    pub fn read_only(&mut self, b: bool) {
+        self.read_only = b;
+    }
+
     /// Get the sid after logging in.
     /// ```
     /// client.login("user", "pass")?;
@@ -362,7 +376,7 @@ impl Client {
         self.sid.as_str()
     }
 
-    /// Get the uid after logging in.
+    /// Get the uid after logging in. This will be empty if read_only is true.
     /// ```
     /// client.login("user", "pass")?;
     /// println!("{}", client.uid());
@@ -559,6 +573,7 @@ impl fmt::Debug for Client {
             .field("connect_timeout", &self.connect_timeout)
             .field("session_timeout", &self.session_timeout)
             .field("domain", &self.domain)
+            .field("read_only", &self.read_only)
             .field("sid", &self.sid)
             .field("uid", &self.uid)
             .field("api_server_version", &self.api_server_version)

@@ -61,3 +61,21 @@ fn logout_then_call() {
         println!("Test passed: {}, {}", res.status(), res.data["message"]);
     }
 }
+
+#[test]
+fn readonly() {
+    let mut client = Client::new("172.25.199.80", 443);
+    client.accept_invalid_certs(true);
+    client.read_only(true);
+    client.login("cp_api", "vpn123").unwrap();
+
+    let res = client.call("add-host", json!({"name": "host1", "ip-address": "1.1.1.1"})).unwrap();
+
+    if res.is_not_success() {
+        println!("Failed to add host in read-only: {}", login_res.data["message"]);
+    }
+
+    client.logout().unwrap();
+    assert!(client.sid().is_empty());
+    assert!(client.uid().is_empty());
+}
