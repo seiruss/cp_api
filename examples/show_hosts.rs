@@ -42,6 +42,8 @@ fn build_client() -> Result<Client, Error> {
     // but setting this to true as this is an example
     client.accept_invalid_certs(true);
 
+    client.read_only(true);
+
     client.log_file("show_hosts.log");
 
     Ok(client)
