@@ -18,7 +18,7 @@ fn display_objects() {
     client.login("cp_api", "vpn123").unwrap();
 
     let hosts = client.query("show-hosts", "standard").unwrap();
-    println!("{:#}", hosts);
+    println!("{:#?}", hosts.objects);
 
     client.logout().unwrap();
 }
@@ -41,6 +41,7 @@ fn print_client() {
     client.certificate("cert.cer");
     client.proxy("https://192.168.1.12:8080");
     client.domain("test domain");
+    client.read_only(true);
     client.log_file("test_log.txt");
 
     client.login("cp_api", "vpn123").unwrap();

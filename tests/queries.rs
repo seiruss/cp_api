@@ -10,9 +10,9 @@ fn show_hosts() {
 
     let hosts = client.query("show-hosts", "standard").unwrap();
 
-    for host in hosts.objects {
+    for host in &hosts.objects {
         println!("{} - {}", host["name"], host["ipv4-address"]);
     }
 
-    hosts.save_objects("hosts.log")?;
+    hosts.save_objects("hosts.log").unwrap();
 }

@@ -2,14 +2,19 @@ use cp_api::Client;
 use std::error::Error;
 
 #[test]
-fn desc_cause() {
+fn desc_source() {
     let mut client = Client::new("192.168.1.12", 443);
     client.accept_invalid_certs(true);
 
     if let Err(e) = client.login("cp_api", "abc123") {
         eprintln!("error: {}", e);
         eprintln!("description: {}", e.description());
-        eprintln!("cause: {}", e.cause().unwrap());
+        if e.source.is_some() {
+            eprintln!("source: {}", e.source().unwrap());
+        }
+        else {
+            eprintln!("no source");
+        }
     }
 }
 
