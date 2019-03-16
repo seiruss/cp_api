@@ -246,6 +246,46 @@ impl Client {
         Ok(client)
     }
 
+    /// A convenience method to perform an API call.
+    ///
+    /// This will check that the call to the server and
+    /// the response status returned from the server were both successful.
+    ///
+    /// ```
+    /// client.call_and_check("show-host", json!({"name": "host1"}))?;
+    /// ```
+    /// The above is the same as the below.
+    /// ```
+    /// let host1 = client.call("show-host", json!({"name": "host1"}))?;
+    /// if host1.is_not_success() {
+    ///     let msg = format!("'show-host' was not successful. status: {}, code: {}, message: {}",
+    ///                         host1.status(), host1.data["code"], host1.data["message"]);
+    ///     return Err(Error::Custom(msg));
+    /// }
+    /// ```
+    pub fn call_and_check(
+        &mut self,
+        command: &str,
+        payload: serde_json::Value
+        ) -> Result<Response>
+    {
+        let res = match self.call(command, payload) {
+            Ok(t) => t,
+            Err(e) => {
+                let msg = format!("Failed to run command, '{}': {}", command, e);
+                return Err(Error::Custom(msg));
+            }
+        };
+
+        if res.is_not_success() {
+            let msg = format!("'{}' was not successful. status: {}, code: {}, message: {}",
+                                command, res.status(), res.data["code"], res.data["message"]);
+            return Err(Error::Custom(msg));
+        }
+
+        Ok(res)
+    }
+
     /// Perform an API query.
     ///
     /// All commands that return a list of objects can take a details-level parameter.
@@ -412,10 +452,10 @@ impl Client {
 
     /// Wait for an API call to complete.
     ///
-    /// Some API commands return a task-id while they continue to run.
-    /// The default is to wait for the task to finish.
+    /// Some API commands return a task-id or tasks while they continue to run.
+    /// The default is to wait for the task(s) to finish.
     ///
-    /// Set this to false to not wait for the task to complete.
+    /// Set this to false to not wait for the task(s) to complete.
     /// ```
     /// client.wait_for_task(false);
     ///
@@ -463,10 +503,10 @@ impl Client {
 
     // Wait for multiple tasks to complete.
     fn _wait_for_tasks(
-            &mut self,
-            tasks: &Vec<serde_json::Value>,
-            command: &str
-            ) -> Result<Response>
+        &mut self,
+        tasks: &Vec<serde_json::Value>,
+        command: &str
+        ) -> Result<Response>
     {
         let mut _res = Response::new();
         let mut ids = Vec::new();
