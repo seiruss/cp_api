@@ -12,6 +12,7 @@ use crate::error::{Error, Result};
 #[derive(Debug, Serialize)]
 pub struct Response {
     status: u16,
+    success: bool,
     url: String,
     headers: HashMap<String, String>,
 
@@ -23,9 +24,11 @@ pub struct Response {
 }
 
 impl Response {
+    // Create a new Response.
     pub(crate) fn new() -> Response {
         Response {
             status: 200,
+            success: true,
             url: String::with_capacity(50),
             headers: HashMap::new(),
             data: json!({}),
@@ -33,10 +36,18 @@ impl Response {
         }
     }
 
+    // Set the values for a Response.
     pub(crate) fn set(reqwest_response: &mut reqwest::Response) -> Result<Response> {
         let mut res = Response::new();
 
         res.status = reqwest_response.status().as_u16();
+        if res.is_success() {
+            res.success = true;
+        }
+        else {
+            res.success = false;
+        }
+
         res.url = reqwest_response.url().to_string();
 
         res.data = match reqwest_response.json() {
@@ -62,6 +73,17 @@ impl Response {
         res.headers = map;
 
         Ok(res)
+    }
+
+    // Check if any tasks failed and if so, set the Response success field to false.
+    pub(crate) fn check_tasks_status(res: &mut Response) {
+        if res.data["tasks"].is_array() {
+            for task in res.data["tasks"].as_array().unwrap() {
+                if task["status"] == "failed" || task["status"] == "partially succeeded" {
+                    res.success = false;
+                }
+            }
+        }
     }
 
     /// Get the status of this Response.
@@ -90,14 +112,14 @@ impl Response {
         self.status >= 100 && self.status < 200
     }
 
-    /// Check if the status is between 200-299.
+    /// Check if the status is between 200-299 and is successful.
     pub fn is_success(&self) -> bool {
-        self.status >= 200 && self.status < 300
+        self.status >= 200 && self.status < 300 && self.success == true
     }
 
     /// Check if the status is not successful.
     pub fn is_not_success(&self) -> bool {
-        self.status < 200 || self.status >= 300
+        self.status < 200 || self.status >= 300 || self.success == false
     }
 
     /// Check if the status is between 300-399.

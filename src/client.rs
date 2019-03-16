@@ -183,8 +183,13 @@ impl Client {
 
         let mut res = Response::set(&mut reqwest_response)?;
 
-        if res.data.get("task-id").is_some() && self.wait_for_task == true {
-            res = self._wait_for_task(res.data["task-id"].as_str().unwrap(), command)?;
+        if self.wait_for_task == true && res.is_success() && command != "show-task" {
+            if res.data.get("task-id").is_some() {
+                res = self._wait_for_task(res.data["task-id"].as_str().unwrap(), command)?;
+            }
+            else if res.data.get("tasks").is_some() {
+                res = self._wait_for_tasks(res.data["tasks"].as_array().unwrap(), command)?;
+            }
         }
 
         if !self.log_file.is_empty() {
@@ -452,6 +457,30 @@ impl Client {
 
             thread::sleep(time::Duration::from_secs(5));
         }
+
+        Ok(_res)
+    }
+
+    // Wait for multiple tasks to complete.
+    fn _wait_for_tasks(
+            &mut self,
+            tasks: &Vec<serde_json::Value>,
+            command: &str
+            ) -> Result<Response>
+    {
+        let mut _res = Response::new();
+        let mut ids = Vec::new();
+
+        for task in tasks {
+            if task.get("task-id").is_some() {
+                let id = task["task-id"].as_str().unwrap();
+                ids.push(id);
+                self._wait_for_task(id, command)?;
+            }
+        }
+
+        _res = self.call("show-task", json!({"task-id": ids, "details-level": "full"}))?;
+        Response::check_tasks_status(&mut _res);
 
         Ok(_res)
     }
