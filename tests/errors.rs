@@ -9,7 +9,7 @@ fn desc_source() {
     if let Err(e) = client.login("cp_api", "abc123") {
         eprintln!("error: {}", e);
         eprintln!("description: {}", e.description());
-        if e.source.is_some() {
+        if e.source().is_some() {
             eprintln!("source: {}", e.source().unwrap());
         }
         else {
