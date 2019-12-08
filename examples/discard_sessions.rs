@@ -102,19 +102,7 @@ fn logout(client: &mut Client) -> Result<(), Error> {
 fn discard_sessions(client: &mut Client) -> Result<(), Error> {
     println!("Querying all sessions...");
 
-    let sessions_res = match client.query("show-sessions", "full") {
-        Ok(t) => t,
-        Err(e) => {
-            let msg = format!("Failed to run show-sessions: {}", e);
-            return Err(Error::Custom(msg));
-        }
-    };
-
-    if sessions_res.is_not_success() {
-        let msg = format!("{}", sessions_res.data["message"]);
-        logout(client)?;
-        return Err(Error::Custom(msg));
-    }
+    let sessions_res = client.query_and_check("show-sessions", json!({"details-level": "full"}))?;
 
     for session in sessions_res.objects {
         // only discard web_api sessions

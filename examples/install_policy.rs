@@ -11,8 +11,11 @@ fn main() {
 
     if let Err(e) = run() {
         eprintln!("Error: {}", e);
+        enter_to_exit();
         process::exit(1);
     }
+
+    enter_to_exit();
 }
 
 fn run() -> Result<(), Error> {
@@ -24,6 +27,12 @@ fn run() -> Result<(), Error> {
     client.save_log()?;
 
     Ok(())
+}
+
+fn enter_to_exit() {
+    println!("\nPress [Enter] to exit");
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf).expect("Failed to read enter key");
 }
 
 fn build_client() -> Result<Client, Error> {
@@ -113,19 +122,7 @@ fn install(client: &mut Client) -> Result<(), Error> {
 
     println!("\nInstalling {} to {}\n", policy, gateway);
 
-    let install_res = match client.call("install-policy", payload) {
-        Ok(t) => t,
-        Err(e) => {
-            let msg = format!("Failed to run install-policy: {}", e);
-            return Err(Error::Custom(msg));
-        }
-    };
-
-    if install_res.is_not_success() {
-        let msg = format!("Failed to run install-policy: {}", install_res.data["message"]);
-        logout(client)?;
-        return Err(Error::Custom(msg));
-    }
+    let _install_res = client.call_and_check("install-policy", payload)?;
 
     Ok(())
 }

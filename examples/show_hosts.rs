@@ -4,14 +4,18 @@ use cp_api::{Client, Error};
 use rpassword;
 use std::process;
 use std::io::{self, Write};
+use serde_json::json;
 
 fn main() {
     println!("Rust Management API Show Hosts Example\n");
 
     if let Err(e) = run() {
         eprintln!("Error: {}", e);
+        enter_to_exit();
         process::exit(1);
     }
+
+    enter_to_exit();
 }
 
 fn run() -> Result<(), Error> {
@@ -23,6 +27,12 @@ fn run() -> Result<(), Error> {
     client.save_log()?;
 
     Ok(())
+}
+
+fn enter_to_exit() {
+    println!("\nPress [Enter] to exit");
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf).expect("Failed to read enter key");
 }
 
 fn build_client() -> Result<Client, Error> {
@@ -103,19 +113,12 @@ fn logout(client: &mut Client) -> Result<(), Error> {
 fn show_hosts(client: &mut Client) -> Result<(), Error> {
     println!("Querying all hosts...");
 
-    let hosts_res = match client.query("show-hosts", "standard") {
-        Ok(t) => t,
-        Err(e) => {
-            let msg = format!("Failed to run show-hosts: {}", e);
-            return Err(Error::Custom(msg));
-        }
-    };
+    let hosts_payload = json!({
+        "details-level": "full",
+        "limit": 500
+    });
 
-    if hosts_res.is_not_success() {
-        let msg = format!("Failed to show-hosts: {}", hosts_res.data["message"]);
-        logout(client)?;
-        return Err(Error::Custom(msg));
-    }
+    let hosts_res = client.query("show-hosts", hosts_payload)?;
 
     for host in &hosts_res.objects {
         println!("{} - {}", host["name"], host["ipv4-address"]);
