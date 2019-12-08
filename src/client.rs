@@ -8,7 +8,6 @@ use reqwest::header::{ACCEPT, CONTENT_TYPE, USER_AGENT};
 
 use serde_json::json;
 use serde::Serialize;
-use serde_derive::Serialize;
 
 use crate::response::Response;
 use crate::error::{Error, Result};
@@ -294,30 +293,45 @@ impl Client {
     /// A vector of all the objects will be stored in the Response objects field.
     ///
     /// ```
-    /// let hosts = client.query("show-hosts", "standard")?;
+    /// let hosts_payload = json!({
+    ///     "details-level": "full",
+    ///     "limit": 500
+    /// });
+    ///
+    /// let hosts = client.query("show-hosts", hosts_payload)?;
     /// assert!(hosts.is_success());
     ///
     /// for host in &hosts.objects {
     ///     println!("{} - {}", host["name"], host["ipv4-address"]);
     /// }
     /// ```
-    pub fn query(&mut self, command: &str, details_level: &str) -> Result<Response> {
+    pub fn query(&mut self, command: &str, payload: serde_json::Value) -> Result<Response> {
         let mut res = Response::new();
         let mut vec: Vec<serde_json::Value> = Vec::new();
 
-        let limit = 50;
-        let mut offset = 0;
+        let limit = match payload.get("limit") {
+            Some(t) => match t.as_u64() {
+                Some(v) => v,
+                None => 50
+            },
+            None => 50
+        };
+
+        let mut offset = match payload.get("offset") {
+            Some(t) => match t.as_u64() {
+                Some(v) => v,
+                None => 0
+            },
+            None => 0
+        };
+
+        let mut payload2 = self.build_query_payload(payload, offset)?;
+
         let mut to = 0;
         let mut total = 1;
 
         while to != total {
-            let payload = json!({
-                "details-level": details_level,
-                "limit": limit,
-                "offset": offset
-            });
-
-            res = self.call(command, payload)?;
+            res = self.call(command, payload2.clone())?;
 
             if res.is_not_success() {
                 let msg = format!("Received an unsuccessful Response from the API \
@@ -343,11 +357,82 @@ impl Client {
 
             vec.append(&mut objects);
 
-            offset += 50;
+            offset += limit;
+
+            if let Some(obj) = payload2.get_mut("offset") {
+                *obj = json!(offset);
+            }
+            else {
+                let msg = String::from("Failed to get the offset to update from payload");
+                return Err(Error::Custom(msg));
+            }
         }
 
         res.objects = vec;
         res.data = json!({});
+
+        Ok(res)
+    }
+
+    // Build the query payload
+    fn build_query_payload(&self, mut payload: serde_json::Value, offset: u64) -> Result<serde_json::Value> {
+        let payload_map = match payload.as_object_mut() {
+            Some(t) => t,
+            None => {
+                let msg = String::from("Failed to parse payload for query");
+                return Err(Error::Custom(msg));
+            }
+        };
+
+        let offset_json = match serde_json::to_value(offset) {
+            Ok(t) => t,
+            Err(e) => {
+                let msg = format!("Failed to convert offset for query: {}", e);
+                return Err(Error::Custom(msg));
+            }
+        };
+
+        payload_map.insert("offset".to_string(), offset_json);
+
+        Ok(json!(payload_map))
+    }
+
+    /// A convenience method to perform an API query.
+    ///
+    /// This will check that the query to the server and
+    /// the response status returned from the server were both successful.
+    ///
+    /// ```
+    /// client.query_and_check("show-hosts", json!({"details-level": "full"}))?;
+    /// ```
+    /// The above is the same as the below.
+    /// ```
+    /// let hosts = client.query("show-hosts", json!({"details-level": "full"}))?;
+    /// if hosts.is_not_success() {
+    ///     let msg = format!("'show-hosts' was not successful. status: {}, code: {}, message: {}",
+    ///                         hosts.status(), hosts.data["code"], hosts.data["message"]);
+    ///     return Err(Error::Custom(msg));
+    /// }
+    /// ```
+    pub fn query_and_check(
+        &mut self,
+        command: &str,
+        payload: serde_json::Value
+        ) -> Result<Response>
+    {
+        let res = match self.query(command, payload) {
+            Ok(t) => t,
+            Err(e) => {
+                let msg = format!("Failed to run command, '{}': {}", command, e);
+                return Err(Error::Custom(msg));
+            }
+        };
+
+        if res.is_not_success() {
+            let msg = format!("'{}' was not successful. status: {}, code: {}, message: {}",
+                                command, res.status(), res.data["code"], res.data["message"]);
+            return Err(Error::Custom(msg));
+        }
 
         Ok(res)
     }

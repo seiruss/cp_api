@@ -4,7 +4,6 @@ use std::io::Write;
 
 use serde_json::json;
 use serde::Serialize;
-use serde_derive::Serialize;
 
 use crate::error::{Error, Result};
 
