@@ -1,3 +1,9 @@
+# v0.4.0
+
+- Added call_and_check method
+- Update query method to take a serde_json Value instead of a details-level
+- Added query_and_check method
+
 # v0.3.1
 
 - Added `Client::read_only()` option to login.
