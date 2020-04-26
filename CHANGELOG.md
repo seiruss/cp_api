@@ -1,8 +1,8 @@
 # v0.4.0
 
-- Added call_and_check method
-- Update query method to take a serde_json Value instead of a details-level
-- Added query_and_check method
+- Added `Client::call_and_check()` method.
+- Update query method to take a serde_json Value instead of a details-level.
+- Added `Client::query_and_check()` method.
 
 # v0.3.1
 
