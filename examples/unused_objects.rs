@@ -41,6 +41,8 @@ fn build_client() -> Result<Client, Error> {
     let port = get_input("Enter server port: ")?;
     let port: u16 = port.parse()?;
 
+    let domain = get_input("Enter Domain name (none for default): ")?;
+
     let mut client = Client::new(server.as_str(), port);
 
     // NOT RECOMMENDED
@@ -48,6 +50,10 @@ fn build_client() -> Result<Client, Error> {
     client.accept_invalid_certs(true);
 
     client.read_only(true);
+
+    if !domain.is_empty() {
+        client.domain(domain.as_str());
+    }
 
     client.log_file("unused_objects.log");
 
@@ -111,20 +117,46 @@ fn logout(client: &mut Client) -> Result<(), Error> {
 }
 
 fn unused_objects(client: &mut Client) -> Result<(), Error> {
-    println!("Querying all unused objects...");
+    let mut level = get_input("Enter details-level (none for default): ")?;
+    if level.is_empty() {
+        level = String::from("standard");
+    }
+
+    let mut limit = get_input("Enter limit (none for default): ")?;
+    if limit.is_empty() {
+        limit = String::from("50");
+    }
+    let limit: u16 = limit.parse()?;
+
+    let mut offset = get_input("Enter offset (none for default): ")?;
+    if offset.is_empty() {
+        offset = String::from("0");
+    }
+    let offset: u32 = offset.parse()?;
 
     let unused_payload = json!({
-        "details-level": "full",
-        "limit": 500
+        "details-level": level,
+        "limit": limit,
+        "offset": offset
     });
+
+    if offset == 0 {
+        println!("\nQuerying all unused objects...");
+    }
+    else {
+        println!("\nQuerying unused objects starting at offset {}", offset);
+    }
 
     let unused_res = client.query_and_check("show-unused-objects", unused_payload)?;
 
-    for obj in &unused_res.objects {
+    // Uncomment to have objects printed
+    /*for obj in &unused_res.objects {
         println!("{}", obj["name"]);
-    }
+    }*/
 
     unused_res.save_objects("unused_objects.txt")?;
+
+    println!("Done\n");
 
     Ok(())
 }

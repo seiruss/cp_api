@@ -11,8 +11,11 @@ fn main() {
 
     if let Err(e) = run() {
         eprintln!("Error: {}", e);
+        enter_to_exit();
         process::exit(1);
     }
+
+    enter_to_exit();
 }
 
 fn run() -> Result<(), Error> {
@@ -26,6 +29,12 @@ fn run() -> Result<(), Error> {
     Ok(())
 }
 
+fn enter_to_exit() {
+    println!("\nPress [Enter] to exit");
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf).expect("Failed to read enter key");
+}
+
 fn build_client() -> Result<Client, Error> {
     let server = get_input("Enter server IP or name: ")?;
 
@@ -37,6 +46,7 @@ fn build_client() -> Result<Client, Error> {
     // NOT RECOMMENDED
     // but setting this to true as this is an example
     client.accept_invalid_certs(true);
+
 
     client.log_file("discard_sessions.log");
 
